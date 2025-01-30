@@ -8,6 +8,10 @@ class Play extends Phaser.Scene {
         this.SHOT_VELOCITY_X = 200
         this.SHOT_VELOCITY_Y_MIN = 700
         this.SHOT_VELOCITY_Y_MAX = 1100
+
+        //adding scores
+        this.shotTotal = 0
+        this.shotScored = 0
     }
 
     preload() {
@@ -47,7 +51,44 @@ class Play extends Phaser.Scene {
         wallB.setX(Phaser.Math.Between(0 + wallB.width / 2, width - wallB.width / 2))
         wallB.body.setImmovable(true)
 
-       
+        //Score UI
+        this.shotText = this.add.text(
+            10, 10, 'Ball Hits: 0',
+            {
+                fontFamily: 'Courier',
+                fontSize: '16px',
+                color: '#000000',
+                backgroundColor: '#FFFFFF',
+                align: 'right',
+                fixedWidth: 300,
+            }
+
+        );
+
+        this.scoreText = this.add.text(
+            10, 30, 'Hole Scored: 0' , {
+            
+                fontFamily: 'Courier',
+                fontSize: '16px',
+                color: '#000000',
+                backgroundColor: '#FFFFFF',
+                align: 'right',
+                fixedWidth: 300,
+            }
+
+        );
+
+        this.percentageText = this.add.text(
+            10 , 50, 'Shot Accuracy: 0%',
+            {
+                fontFamily: 'Courier',
+                fontSize: '16px',
+                color: '#000000',
+                backgroundColor: '#FFFFFF',
+                align: 'right',
+                fixedWidth: 300,
+            });
+
 
         this.walls = this.add.group([wallA, wallB])
 
@@ -58,13 +99,31 @@ class Play extends Phaser.Scene {
 
         // add pointer input
         this.input.on('pointerdown', (pointer) => {
-            let shotDirection = pointer.y <= this.ball.y ? 1: -1
-            this.ball.body.setVelocityX(Phaser.Math.Between(-this.SHOT_VELOCITY_X, this.SHOT_VELOCITY_X))
-            this.ball.body.setVelocity(Phaser.Math.Between(this.SHOT_VELOCITY_Y_MIN, this.SHOT_VELOCITY_Y_MAX) * shotDirection)
+            this.shotTotal++
+            this.scoreUpdate()
+
+        //directions of x and y pointer values from ball
+            let shotDirectionX = pointer.x - this.ball.x 
+            let shotDirectionY = pointer.y - this.ball.y
+
+        //normalizing pointer 
+        let magnitude = Math.sqrt(shotDirectionX * shotDirectionX + shotDirectionY * shotDirectionY)
+        if (magnitude > 0 ){
+            shotDirectionX = shotDirectionX / magnitude
+            shotDirectionY = shotDirectionY / magnitude
+        }
+        //shot velocity 
+            let velocityX = shotDirectionX * this.SHOT_VELOCITY_X
+            let velocityY = shotDirectionY * Phaser.Math.Between(this.SHOT_VELOCITY_Y_MIN, this.SHOT_VELOCITY_Y_MAX)
+       
+        //Applying to ball 
+        this.ball.body.setVelocity(velocityX, velocityY) 
+
         })
 
         // cup/ball collision
         this.physics.add.collider(this.ball, this.cup, (ball,cup) => {
+            this.shotScored++
             this.ballResets()
         })
 
@@ -74,25 +133,35 @@ class Play extends Phaser.Scene {
 
         // ball/one-way collision
         this.physics.add.collider(this.ball, this.oneway)
-        
-    
-
 
     }
         // resetting ball 
         ballResets() {
             this.ball.setPosition(this.startingBallX, this.startingBallY)
             this.ball.body.setVelocity(0,0)
-}
+            this.scoreUpdate()
+   
+    }
+
+        // updating shot counter UI
+        scoreUpdate(){
+            this.shotText.setText(`Ball Hits: ${this.shotTotal}`)
+            this.scoreText.setText(`Holes Scored: ${this.shotScored}`)
+            let accuracy = this.shotTotal > 0 ? (this.shotScored / this.shotTotal * 100).toFixed(1) : 0;
+            this.percentageText.setText(`Accuracy Rate: ${accuracy}`)
+            }
+
     update() {
 
     }
 }
+
+
 /*
 CODE CHALLENGE
 Try to implement at least 3/4 of the following features during the remainder of class (hint: each takes roughly 15 or fewer lines of code to implement):
 [X] Add ball reset logic on successful shot
-[ ] Improve shot logic by making pointer’s relative x-position shoot the ball in correct x-direction
+[X] Improve shot logic by making pointer’s relative x-position shoot the ball in correct x-direction
 [ ] Make one obstacle move left/right and bounce against screen edges
-[ ] Create and display shot counter, score, and successful shot percentage
+[X] Create and display shot counter, score, and successful shot percentage
 */
