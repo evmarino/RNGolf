@@ -30,7 +30,9 @@ class Play extends Phaser.Scene {
         this.cup.body.setImmovable(true)
 
         // add ball
-        this.ball = this.physics.add.sprite(width / 2, height -  height/10, 'ball')
+        this.startingBallX = width / 2
+        this.startingBallY = height - height / 2
+        this.ball = this.physics.add.sprite(this.startingBallX, this.startingBallY, 'ball')
         this.ball.body.setCircle(this.ball.width / 2)
         this.ball.body.setCollideWorldBounds(true)
         this.ball.body.setBounce(0.5)
@@ -63,7 +65,7 @@ class Play extends Phaser.Scene {
 
         // cup/ball collision
         this.physics.add.collider(this.ball, this.cup, (ball,cup) => {
-            ball.destroy()
+            this.ballResets()
         })
 
         // ball/wall collision
@@ -73,10 +75,15 @@ class Play extends Phaser.Scene {
         // ball/one-way collision
         this.physics.add.collider(this.ball, this.oneway)
         
+    
+
 
     }
-
-
+        // resetting ball 
+        ballResets() {
+            this.ball.setPosition(this.startingBallX, this.startingBallY)
+            this.ball.body.setVelocity(0,0)
+}
     update() {
 
     }
@@ -84,7 +91,7 @@ class Play extends Phaser.Scene {
 /*
 CODE CHALLENGE
 Try to implement at least 3/4 of the following features during the remainder of class (hint: each takes roughly 15 or fewer lines of code to implement):
-[ ] Add ball reset logic on successful shot
+[X] Add ball reset logic on successful shot
 [ ] Improve shot logic by making pointer’s relative x-position shoot the ball in correct x-direction
 [ ] Make one obstacle move left/right and bounce against screen edges
 [ ] Create and display shot counter, score, and successful shot percentage
